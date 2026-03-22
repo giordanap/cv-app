@@ -1,0 +1,50 @@
+.cv-page {
+  padding: 1.35rem 0.8rem 1.45rem;
+}
+
+.cv-sheet {
+  width: min(1120px, calc(100vw - 1.6rem));
+  margin: 0 auto;
+  background: var(--sheet-bg);
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  border: 1px solid var(--stroke-soft);
+  box-shadow: 0 16px 36px rgba(45, 42, 38, 0.12);
+}
+
+.cv-sidebar {
+  background: var(--sidebar-bg);
+  padding: 2rem 1.3rem 1.5rem;
+  border-right: 1px solid var(--stroke-soft);
+}
+
+.cv-main {
+  padding: 1.72rem 1.65rem 1.52rem;
+}
+
+.cv-block + .cv-block {
+  margin-top: 1rem;
+}
+
+.main-section + .main-section {
+  margin-top: 1rem;
+}
+
+.main-section {
+  break-inside: avoid;
+}
+
+@media (max-width: 930px) {
+  .cv-page {
+    padding: 1rem 0.65rem 1.25rem;
+  }
+
+  .cv-sheet {
+    grid-template-columns: 1fr;
+  }
+
+  .cv-sidebar {
+    border-right: 0;
+    border-bottom: 1px solid var(--stroke-soft);
+  }
+}

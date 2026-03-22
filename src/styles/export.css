@@ -1,0 +1,26 @@
+@media print {
+  body {
+    background: #fff;
+  }
+
+  .floating-tools {
+    display: none;
+  }
+
+  .cv-page {
+    padding: 0;
+  }
+
+  .cv-sheet {
+    width: 100%;
+    border: 0;
+    box-shadow: none;
+  }
+
+  .job-entry,
+  .main-section,
+  .education-entry {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}

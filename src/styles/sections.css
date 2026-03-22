@@ -1,0 +1,229 @@
+.cv-name {
+  font-family: 'Lora', Georgia, serif;
+  font-size: 1.63rem;
+  line-height: 1.22;
+  letter-spacing: 0.015em;
+}
+
+.cv-divider {
+  width: 44px;
+  height: 1px;
+  margin: 0.75rem 0;
+  background: var(--divider-ink);
+}
+
+.cv-base-title {
+  color: var(--text-secondary);
+  font-size: 0.97rem;
+  margin-bottom: 1.05rem;
+}
+
+.cv-block h2,
+.main-section h3 {
+  font-family: 'Lora', Georgia, serif;
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--heading-ink);
+  margin-bottom: 0.5rem;
+}
+
+.contact-line {
+  display: flex;
+  align-items: center;
+  gap: 0.42rem;
+  font-size: 0.96rem;
+  margin-bottom: 0.3rem;
+  color: var(--text-primary);
+}
+
+.contact-line svg {
+  flex: 0 0 auto;
+  color: var(--icon-ink);
+}
+
+.social-row {
+  display: flex;
+  gap: 0.45rem;
+  margin-top: 0.45rem;
+}
+
+.social-row a {
+  width: 1.7rem;
+  height: 1.7rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--stroke-soft);
+  border-radius: 0.18rem;
+  background: var(--control-bg);
+}
+
+.expertise-group {
+  padding: 0.4rem 0.46rem 0.46rem;
+  margin-bottom: 0.4rem;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+}
+
+.expertise-group h3 {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.32rem;
+  color: var(--heading-ink);
+}
+
+.expertise-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.22rem;
+}
+
+.expertise-chip {
+  font-size: 0.78rem;
+  padding: 0.1rem 0.35rem;
+  border: 1px solid var(--chip-border);
+  color: var(--text-primary);
+  background: var(--chip-bg);
+}
+
+.hobbies-inline {
+  font-size: 0.92rem;
+  line-height: 1.4;
+  color: var(--text-primary);
+}
+
+.language-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 0.42rem;
+}
+
+.language-row {
+  font-size: 0.9rem;
+  color: var(--icon-ink);
+  margin-bottom: 0.18rem;
+}
+
+.language-bar {
+  width: 100%;
+  height: 0.35rem;
+  background: var(--language-track);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.language-bar div {
+  height: 100%;
+  background: var(--language-fill);
+}
+
+.main-section p {
+  font-size: 0.97rem;
+  line-height: 1.46;
+  color: var(--text-primary);
+}
+
+.main-section p + p {
+  margin-top: 0.33rem;
+}
+
+.employment-list {
+  display: grid;
+  gap: 0.42rem;
+}
+
+.job-entry {
+  display: grid;
+  gap: 0.01rem;
+  break-inside: avoid;
+}
+
+.job-date {
+  font-size: 0.81rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.03rem;
+}
+
+.job-heading {
+  font-size: 1.01rem;
+  line-height: 1.24;
+  margin-bottom: 0.01rem;
+}
+
+.job-details ul {
+  margin: 0;
+  padding-left: 0.84rem;
+  margin-left: 0.14rem;
+  display: grid;
+  gap: 0.06rem;
+}
+
+.job-details li {
+  font-size: 0.91rem;
+  line-height: 1.23;
+}
+
+.stack-chips {
+  margin-top: 0.1rem;
+  margin-bottom: 0.24rem;
+  display: flex;
+  flex-wrap: wrap;
+  row-gap: 0.08rem;
+  column-gap: 0.11rem;
+}
+
+.stack-chips span {
+  font-size: 0.73rem;
+  padding: 0.11rem 0.37rem;
+  border: 1px solid var(--stack-border);
+  background: var(--stack-bg);
+  color: var(--text-primary);
+  border-radius: 0.08rem;
+}
+
+.education-list {
+  display: grid;
+  gap: 0.42rem;
+}
+
+.education-entry {
+  display: grid;
+  gap: 0.04rem;
+  break-inside: avoid;
+}
+
+.education-date {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  margin-bottom: 0.04rem;
+}
+
+.education-heading {
+  font-size: 0.97rem;
+  line-height: 1.24;
+}
+
+.education-field {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+}
+
+.education-entry p {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+}
+
+.references-section p {
+  font-size: 0.94rem;
+}
+
+@media (max-width: 930px) {
+  .job-date,
+  .education-date {
+    font-weight: 600;
+    color: #3c3832;
+  }
+}

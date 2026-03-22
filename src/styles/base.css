@@ -1,0 +1,60 @@
+@import url('https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Source+Sans+3:wght@300;400;500;600&display=swap');
+
+:root {
+  --page-bg: #ebe7df;
+  --sheet-bg: #f5f2ec;
+  --sidebar-bg: #e2ddd4;
+  --text-primary: #262422;
+  --text-secondary: #53504c;
+  --heading-ink: #302d28;
+  --divider-ink: #8f8678;
+  --icon-ink: #3f3a34;
+  --stroke-soft: #c8c1b5;
+  --stroke-strong: #8f8678;
+  --chip-bg: #d6cec2;
+  --chip-border: #b8b0a2;
+  --panel-bg: #d8d0c4;
+  --panel-border: #c7bfb2;
+  --stack-bg: #e8e2d8;
+  --stack-border: #c2b9ad;
+  --language-track: #c9c1b6;
+  --language-fill: #71675a;
+  --control-bg: rgba(245, 242, 236, 0.74);
+  --accent-ink: #1f1d1b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: 'Source Sans 3', 'Segoe UI', Tahoma, sans-serif;
+  font-size: 1.01rem;
+  color: var(--text-primary);
+  background: var(--page-bg);
+}
+
+h1,
+h2,
+h3,
+h4,
+p,
+ul {
+  margin: 0;
+}
+
+ul {
+  padding-left: 1.1rem;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
