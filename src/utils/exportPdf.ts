@@ -1,17 +1,21 @@
 import { jsPDF } from 'jspdf'
 import type { ResolvedCv } from '../types/cv'
 import type { PaperTone } from '../theme/paperTones'
+import githubSvgRaw from '../assets/pdf-icons/github.svg?raw'
+import linkedinSvgRaw from '../assets/pdf-icons/linkedin.svg?raw'
+import xSvgRaw from '../assets/pdf-icons/x.svg?raw'
+import whatsappSvgRaw from '../assets/pdf-icons/whatsapp.svg?raw'
 
 const PAGE_WIDTH = 210
 const PAGE_HEIGHT = 297
-const TOP_MARGIN = 10
-const BOTTOM_MARGIN = 10
+const TOP_MARGIN = 11
+const BOTTOM_MARGIN = 11
 const SIDEBAR_BG_WIDTH = 61
 const SIDEBAR_TEXT_X = 8.5
 const SIDEBAR_TEXT_WIDTH = 44
 const MAIN_X = 68
 const MAIN_WIDTH = 136
-const MAIN_TOP = 13
+const MAIN_TOP = 14
 const MAIN_BOTTOM = PAGE_HEIGHT - BOTTOM_MARGIN
 
 type RichSegment = {
@@ -139,7 +143,7 @@ const drawBullet = (
   width: number,
 ): number => {
   const fontSize = 8.4
-  const lineHeight = 3.7
+  const lineHeight = 3.9
   const bulletOffset = 3.1
   const lines = wrapRichText(pdf, splitRichText(text, emphasis), width - bulletOffset, fontSize)
 
@@ -156,7 +160,7 @@ const drawBullet = (
 
 const estimateBulletHeight = (pdf: jsPDF, text: string, emphasis: string[], width: number): number => {
   const lines = wrapRichText(pdf, splitRichText(text, emphasis), width - 3.1, 8.4)
-  return lines.length * 3.7
+  return lines.length * 3.9
 }
 
 const drawWrappedText = (
@@ -201,7 +205,7 @@ const estimateChipBlockHeight = (pdf: jsPDF, chips: string[], width: number): nu
     lineWidth += lineWidth > 0 ? chipWidth + 1 : chipWidth
   })
 
-  return lines * 4.1
+  return lines * 4.45
 }
 
 const drawChips = (pdf: jsPDF, chips: string[], x: number, y: number, width: number, tone: PaperTone): number => {
@@ -209,25 +213,37 @@ const drawChips = (pdf: jsPDF, chips: string[], x: number, y: number, width: num
     return 0
   }
 
-  applyFill(pdf, tone.stackBg)
-  applyStroke(pdf, tone.stackBorder)
-  applyText(pdf, '#3a3630')
+  let cursorX = x
+  let cursorY = y
+  const lineHeight = 4.45
+
+  // Measure chip widths before drawing so the font state is primed.
   pdf.setFont('helvetica', 'normal')
   pdf.setFontSize(6.9)
 
-  let cursorX = x
-  let cursorY = y
-  const lineHeight = 4.1
-
   chips.forEach((chip) => {
+    // Re-measure with a stable font state each iteration.
+    pdf.setFont('helvetica', 'normal')
+    pdf.setFontSize(6.9)
     const chipWidth = pdf.getTextWidth(chip) + 3.8
+
     if (cursorX > x && cursorX + chipWidth > x + width) {
       cursorX = x
       cursorY += lineHeight
     }
 
+    // Draw background + border first (this alters fill/stroke state).
+    applyFill(pdf, tone.stackBg)
+    applyStroke(pdf, tone.stackBorder)
     pdf.roundedRect(cursorX, cursorY - 2.95, chipWidth, 3.2, 0.7, 0.7, 'FD')
+
+    // Re-apply text color, font and size after every shape draw to prevent
+    // jsPDF's internal state from contaminating the text color.
+    applyText(pdf, '#3a3630')
+    pdf.setFont('helvetica', 'normal')
+    pdf.setFontSize(6.9)
     pdf.text(chip, cursorX + 1.9, cursorY - 0.62)
+
     cursorX += chipWidth + 1
   })
 
@@ -254,12 +270,12 @@ const drawSidebarHeader = (pdf: jsPDF, cv: ResolvedCv) => {
   const headerBottom = TOP_MARGIN + 4 + nameLines.length * 6.4
   applyStroke(pdf, '#8f8678')
   pdf.setLineWidth(0.4)
-  pdf.line(SIDEBAR_TEXT_X, headerBottom + 1, SIDEBAR_TEXT_X + 18, headerBottom + 1)
+  pdf.line(SIDEBAR_TEXT_X, headerBottom + 1.3, SIDEBAR_TEXT_X + 18, headerBottom + 1.3)
 
   applyText(pdf, '#53504c')
   pdf.setFont('helvetica', 'normal')
   pdf.setFontSize(8.8)
-  pdf.text(cv.person.baseTitle, SIDEBAR_TEXT_X, headerBottom + 6)
+  pdf.text(cv.person.baseTitle, SIDEBAR_TEXT_X, headerBottom + 6.7)
 }
 
 const drawSidebarSectionTitle = (pdf: jsPDF, label: string, y: number) => {
@@ -269,60 +285,161 @@ const drawSidebarSectionTitle = (pdf: jsPDF, label: string, y: number) => {
   pdf.text(label.toUpperCase(), SIDEBAR_TEXT_X, y)
 }
 
-const drawSidebarFull = (pdf: jsPDF, cv: ResolvedCv, tone: PaperTone) => {
+const tintSvg = (svgString: string, color: string): string =>
+  svgString.replace(/fill="(?!none)[^"]*"/g, `fill="${color}"`)
+
+const svgToDataUrl = (svgString: string): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const tinted = tintSvg(svgString, '#3a3630')
+    const blob = new Blob([tinted], { type: 'image/svg+xml;charset=utf-8' })
+    const objectUrl = URL.createObjectURL(blob)
+    const img = new Image()
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas')
+        canvas.width = 128
+        canvas.height = 128
+        const ctx = canvas.getContext('2d')
+        if (!ctx) {
+          URL.revokeObjectURL(objectUrl)
+          reject(new Error('Canvas 2D context unavailable'))
+          return
+        }
+        ctx.drawImage(img, 0, 0, 128, 128)
+        URL.revokeObjectURL(objectUrl)
+        resolve(canvas.toDataURL('image/png'))
+      } catch (err) {
+        URL.revokeObjectURL(objectUrl)
+        reject(err)
+      }
+    }
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl)
+      reject(new Error('Failed to rasterize SVG for PDF icon'))
+    }
+    img.src = objectUrl
+  })
+
+type PdfIconSet = {
+  github: string
+  linkedin: string
+  x: string
+  whatsapp: string
+}
+
+const loadPdfIconSet = (): Promise<PdfIconSet> =>
+  Promise.all([
+    svgToDataUrl(githubSvgRaw),
+    svgToDataUrl(linkedinSvgRaw),
+    svgToDataUrl(xSvgRaw),
+    svgToDataUrl(whatsappSvgRaw),
+  ]).then(([github, linkedin, x, whatsapp]) => ({ github, linkedin, x, whatsapp }))
+
+type ContactIcon = {
+  dataUrl: string
+  href: string
+}
+
+const drawContactIcons = (
+  pdf: jsPDF,
+  icons: ContactIcon[],
+  x: number,
+  y: number,
+  width: number,
+  tone: PaperTone,
+): number => {
+  if (icons.length === 0) {
+    return 0
+  }
+
+  const iconSize = 5.4
+  const pad = 0.9
+  const gap = 1.1
+  const rowHeight = iconSize + gap
+  const columns = Math.max(1, Math.floor((width + gap) / (iconSize + gap)))
+
+  icons.forEach((icon, index) => {
+    const column = index % columns
+    const row = Math.floor(index / columns)
+    const iconX = x + column * (iconSize + gap)
+    const iconY = y + row * rowHeight
+
+    applyFill(pdf, tone.panelBg)
+    applyStroke(pdf, tone.panelBorder)
+    pdf.roundedRect(iconX, iconY, iconSize, iconSize, 0.8, 0.8, 'FD')
+
+    pdf.addImage(icon.dataUrl, 'PNG', iconX + pad, iconY + pad, iconSize - pad * 2, iconSize - pad * 2)
+
+    pdf.link(iconX, iconY, iconSize, iconSize, { url: icon.href })
+  })
+
+  const rows = Math.ceil(icons.length / columns)
+  return rows * iconSize + (rows - 1) * gap
+}
+
+const drawSidebarFull = (pdf: jsPDF, cv: ResolvedCv, tone: PaperTone, iconSet: PdfIconSet) => {
   drawSidebarHeader(pdf, cv)
-  let y = 46
+  let y = 49
 
   drawSidebarSectionTitle(pdf, cv.labels.contact, y)
-  y += 5
+  y += 5.8
   applyText(pdf, '#2f2b27')
   pdf.setFont('helvetica', 'normal')
   pdf.setFontSize(8.3)
   const contactLines = [
     cv.person.email,
     cv.person.phone,
-    cv.links.github,
-    cv.links.linkedin,
-    cv.links.twitter,
-    cv.links.whatsapp ?? '',
   ].filter(Boolean)
 
   contactLines.forEach((line) => {
-    const measured = measureWrappedText(pdf, line, SIDEBAR_TEXT_WIDTH, 8.3, 3.65)
+    const measured = measureWrappedText(pdf, line, SIDEBAR_TEXT_WIDTH, 8.3, 3.8)
     pdf.text(measured.lines, SIDEBAR_TEXT_X, y)
-    y += measured.height + 0.45
+    y += measured.height + 0.65
   })
 
-  y += 3
+  const contactIcons: ContactIcon[] = [
+    { dataUrl: iconSet.github, href: cv.links.github },
+    { dataUrl: iconSet.linkedin, href: cv.links.linkedin },
+    { dataUrl: iconSet.x, href: cv.links.twitter },
+  ]
+
+  if (cv.links.whatsapp) {
+    contactIcons.push({ dataUrl: iconSet.whatsapp, href: cv.links.whatsapp })
+  }
+
+  y += 1.05
+  y += drawContactIcons(pdf, contactIcons, SIDEBAR_TEXT_X, y, SIDEBAR_TEXT_WIDTH, tone)
+
+  y += 4.1
   drawSidebarSectionTitle(pdf, cv.labels.expertise, y)
-  y += 5
+  y += 5.7
   cv.expertise.forEach((group) => {
     applyText(pdf, '#3e3932')
     pdf.setFont('helvetica', 'bold')
     pdf.setFontSize(7.4)
     pdf.text(group.title, SIDEBAR_TEXT_X, y)
-    y += 3.7
+    y += 4.1
     applyText(pdf, '#312d29')
     pdf.setFont('helvetica', 'normal')
     const items = group.items.join(', ')
-    const measured = measureWrappedText(pdf, items, SIDEBAR_TEXT_WIDTH, 7.4, 3.25)
+    const measured = measureWrappedText(pdf, items, SIDEBAR_TEXT_WIDTH, 7.4, 3.45)
     pdf.text(measured.lines, SIDEBAR_TEXT_X, y)
-    y += measured.height + 1.2
+    y += measured.height + 1.75
   })
 
   drawSidebarSectionTitle(pdf, cv.labels.hobbies, y)
-  y += 5
+  y += 5.7
   applyText(pdf, '#312d29')
   pdf.setFont('helvetica', 'normal')
   pdf.setFontSize(7.9)
   cv.hobbies.forEach((hobby) => {
     pdf.text(`• ${hobby}`, SIDEBAR_TEXT_X, y)
-    y += 3.5
+    y += 4.05
   })
 
-  y += 1.8
+  y += 2.8
   drawSidebarSectionTitle(pdf, cv.labels.languages, y)
-  y += 5
+  y += 5.7
   cv.languages.forEach((language) => {
     applyText(pdf, '#3f3a34')
     pdf.setFont('helvetica', 'normal')
@@ -340,7 +457,7 @@ const drawSidebarFull = (pdf: jsPDF, cv: ResolvedCv, tone: PaperTone) => {
       1,
       'F',
     )
-    y += 6.8
+    y += 7.45
   })
 }
 
@@ -353,19 +470,19 @@ const drawSectionHeading = (pdf: jsPDF, label: string, y: number): number => {
   pdf.setFont('times', 'bold')
   pdf.setFontSize(9.8)
   pdf.text(label.toUpperCase(), MAIN_X, y)
-  return y + 4.8
+  return y + 5.7
 }
 
 const estimateJobHeight = (pdf: jsPDF, job: ResolvedCv['employment'][number]) => {
   const heading = `${job.role}, ${job.company}, ${job.location}`
-  const headingHeight = measureWrappedText(pdf, heading, MAIN_WIDTH, 9.8, 4).height
-  let height = headingHeight + 3.2
+  const headingHeight = measureWrappedText(pdf, heading, MAIN_WIDTH, 9.8, 4.35).height
+  let height = headingHeight + 4.2
 
   job.bullets.forEach((bullet) => {
-    height += estimateBulletHeight(pdf, bullet.text, bullet.emphasis, MAIN_WIDTH) + 0.5
+    height += estimateBulletHeight(pdf, bullet.text, bullet.emphasis, MAIN_WIDTH) + 0.9
   })
 
-  height += estimateChipBlockHeight(pdf, job.stack, MAIN_WIDTH) + 1.5
+  height += estimateChipBlockHeight(pdf, job.stack, MAIN_WIDTH) + 2.1
   return height
 }
 
@@ -376,28 +493,29 @@ const drawJob = (pdf: jsPDF, job: ResolvedCv['employment'][number], y: number, t
   const heading = `${job.role}, ${job.company}, ${job.location}`
   const headingLines = pdf.splitTextToSize(heading, MAIN_WIDTH) as string[]
   pdf.text(headingLines, MAIN_X, y)
-  let cursorY = y + headingLines.length * 4
+  let cursorY = y + headingLines.length * 4.35
 
   applyText(pdf, '#56514a')
   pdf.setFont('helvetica', 'normal')
   pdf.setFontSize(8)
   pdf.text(job.dateRange, MAIN_X, cursorY)
-  cursorY += 3.7
+  cursorY += 4.3
 
   applyText(pdf, '#302d29')
   job.bullets.forEach((bullet) => {
-    cursorY += drawBullet(pdf, bullet.text, bullet.emphasis, MAIN_X, cursorY, MAIN_WIDTH) + 0.42
+    cursorY += drawBullet(pdf, bullet.text, bullet.emphasis, MAIN_X, cursorY, MAIN_WIDTH) + 0.78
   })
 
-  cursorY += drawChips(pdf, job.stack, MAIN_X, cursorY, MAIN_WIDTH, tone) + 1.25
+  cursorY += 0.35
+  cursorY += drawChips(pdf, job.stack, MAIN_X, cursorY, MAIN_WIDTH, tone) + 1.85
   return cursorY
 }
 
 const estimateEducationHeight = (pdf: jsPDF, item: ResolvedCv['education'][number]) => {
   const heading = `${item.degree}, ${item.institution}, ${item.location}`
-  const headingHeight = measureWrappedText(pdf, heading, MAIN_WIDTH, 9.6, 3.95).height
-  const fieldHeight = item.field ? measureWrappedText(pdf, item.field, MAIN_WIDTH, 8.2, 3.55).height : 0
-  return headingHeight + 6.6 + fieldHeight
+  const headingHeight = measureWrappedText(pdf, heading, MAIN_WIDTH, 9.6, 4.15).height
+  const fieldHeight = item.field ? measureWrappedText(pdf, item.field, MAIN_WIDTH, 8.2, 3.8).height : 0
+  return headingHeight + 7.5 + fieldHeight
 }
 
 const drawEducation = (pdf: jsPDF, item: ResolvedCv['education'][number], y: number): number => {
@@ -407,13 +525,13 @@ const drawEducation = (pdf: jsPDF, item: ResolvedCv['education'][number], y: num
   const heading = `${item.degree}, ${item.institution}, ${item.location}`
   const headingLines = pdf.splitTextToSize(heading, MAIN_WIDTH) as string[]
   pdf.text(headingLines, MAIN_X, y)
-  let cursorY = y + headingLines.length * 3.95
+  let cursorY = y + headingLines.length * 4.15
 
   applyText(pdf, '#56514a')
   pdf.setFont('helvetica', 'normal')
   pdf.setFontSize(8)
   pdf.text(item.dateRange, MAIN_X, cursorY)
-  cursorY += 3.55
+  cursorY += 4.05
 
   if (item.field) {
     applyText(pdf, '#555048')
@@ -421,10 +539,10 @@ const drawEducation = (pdf: jsPDF, item: ResolvedCv['education'][number], y: num
     pdf.setFontSize(8.2)
     const fieldLines = pdf.splitTextToSize(item.field, MAIN_WIDTH) as string[]
     pdf.text(fieldLines, MAIN_X, cursorY)
-    cursorY += fieldLines.length * 3.55
+    cursorY += fieldLines.length * 3.8
   }
 
-  return cursorY + 1.15
+  return cursorY + 1.55
 }
 
 export const exportCvToPdf = async (
@@ -439,6 +557,8 @@ export const exportCvToPdf = async (
     compress: true,
   })
 
+  const iconSet = await loadPdfIconSet()
+
   let pageIndex = 0
   let cursorY = MAIN_TOP
 
@@ -450,7 +570,7 @@ export const exportCvToPdf = async (
     drawPageFrame(pdf, tone)
 
     if (pageIndex === 0) {
-      drawSidebarFull(pdf, cv, tone)
+      drawSidebarFull(pdf, cv, tone, iconSet)
     } else {
       drawSidebarContinuation(pdf, cv)
     }
@@ -470,15 +590,15 @@ export const exportCvToPdf = async (
   pdf.setFontSize(8.7)
 
   cv.summary.forEach((paragraph) => {
-    const measured = measureWrappedText(pdf, paragraph, MAIN_WIDTH, 8.7, 3.95)
+    const measured = measureWrappedText(pdf, paragraph, MAIN_WIDTH, 8.7, 4.15)
     if (cursorY + measured.height > MAIN_BOTTOM) {
       addPage(cv.labels.summary)
     }
 
-    cursorY += drawWrappedText(pdf, paragraph, MAIN_X, cursorY, MAIN_WIDTH, 8.7, 3.95) + 0.75
+    cursorY += drawWrappedText(pdf, paragraph, MAIN_X, cursorY, MAIN_WIDTH, 8.7, 4.15) + 1.1
   })
 
-  cursorY += 2.2
+  cursorY += 3.1
   if (cursorY + 12 > MAIN_BOTTOM) {
     addPage(cv.labels.employment)
   } else {
@@ -494,7 +614,7 @@ export const exportCvToPdf = async (
     cursorY = drawJob(pdf, job, cursorY, tone)
   })
 
-  cursorY += 2.2
+  cursorY += 3.1
   if (cursorY + 18 > MAIN_BOTTOM) {
     addPage(cv.labels.education)
   } else {
@@ -510,7 +630,7 @@ export const exportCvToPdf = async (
     cursorY = drawEducation(pdf, item, cursorY)
   })
 
-  cursorY += 2.2
+  cursorY += 3
   if (cursorY + 12 > MAIN_BOTTOM) {
     addPage(cv.labels.references)
   } else {
@@ -520,7 +640,7 @@ export const exportCvToPdf = async (
   applyText(pdf, '#302d29')
   pdf.setFont('helvetica', 'normal')
   pdf.setFontSize(8.7)
-  drawWrappedText(pdf, cv.labels.referencesText, MAIN_X, cursorY, MAIN_WIDTH, 8.7, 3.95)
+  drawWrappedText(pdf, cv.labels.referencesText, MAIN_X, cursorY, MAIN_WIDTH, 8.7, 4.1)
 
   pdf.save(fileName)
 }

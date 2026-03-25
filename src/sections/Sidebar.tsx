@@ -48,18 +48,20 @@ export const Sidebar = ({ cv }: SidebarProps) => {
 
       <section className="cv-block">
         <h2>{cv.labels.contact}</h2>
-        <ContactRow
-          icon={<MailIcon width={14} height={14} />}
-          text={cv.person.email}
-          href={`mailto:${cv.person.email}`}
-        />
-        <ContactRow
-          icon={<PhoneIcon width={14} height={14} />}
-          text={cv.person.phone}
-          href={`tel:${cv.person.phone.replace(/\s+/g, '')}`}
-        />
+        <div className="contact-lines">
+          <ContactRow
+            icon={<MailIcon width={14} height={14} />}
+            text={cv.person.email}
+            href={`mailto:${cv.person.email}`}
+          />
+          <ContactRow
+            icon={<PhoneIcon width={14} height={14} />}
+            text={cv.person.phone}
+            href={`tel:${cv.person.phone.replace(/\s+/g, '')}`}
+          />
+        </div>
 
-        <div className="social-row" aria-label="Social links">
+        <div className="contact-socials" aria-label="Social links">
           <a href={cv.links.github} target="_blank" rel="noreferrer" aria-label="GitHub">
             <GitHubIcon width={15} height={15} />
           </a>
